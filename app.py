@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 from azure.data.tables import TableServiceClient
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS
 
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 table_service = TableServiceClient.from_connection_string(conn_str=connection_string)
@@ -21,7 +23,7 @@ def get_data():
     end_date = request.args.get('end_date')
     query = f"TS ge '{start_date}' and TS lt '{end_date}'"
     entities = table_client.query_entities(query_filter=query)
-    data = [{"Timestamp": e["TS"],"Description": e["Description"], "Weevil_number": e["Weevil_number"]} for e in entities]
+    data = [{"Timestamp": e["TS"], "Description": e["Description"], "Weevil_number": e["Weevil_number"]} for e in entities]
     return jsonify(data)
 
 if __name__ == '__main__':
