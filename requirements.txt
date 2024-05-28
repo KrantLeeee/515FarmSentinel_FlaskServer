@@ -1,3 +1,4 @@
 Flask 
 azure-data-tables
 python-dotenv
+flask-cors

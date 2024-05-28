@@ -21,7 +21,7 @@ def get_data():
     end_date = request.args.get('end_date')
     query = f"TS ge '{start_date}' and TS lt '{end_date}'"
     entities = table_client.query_entities(query_filter=query)
-    data = [{"Timestamp": e["TS"], "Weevil_number": e["Weevil_number"]} for e in entities]
+    data = [{"Timestamp": e["TS"],"Description": e["Description"], "Weevil_number": e["Weevil_number"]} for e in entities]
     return jsonify(data)
 
 if __name__ == '__main__':
