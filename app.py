@@ -41,5 +41,19 @@ def capture_now():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/update_peaweevil', methods=['POST'])
+def update_peaweevil():
+    data = request.get_json()
+    id = data.get('id')
+    new_number = data.get('newNumber')
+
+    try:
+        entity = table_client.get_entity(partition_key="your_partition_key", row_key=id)
+        entity['Weevil_number'] = new_number
+        table_client.update_entity(entity)
+        return jsonify({"message": "Peaweevil number updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
