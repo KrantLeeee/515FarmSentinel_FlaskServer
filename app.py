@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})  # Enable CORS for specific origin
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}}, methods=["GET", "POST", "DELETE"])  # Enable CORS for specific origin and methods
 
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 table_service = TableServiceClient.from_connection_string(conn_str=connection_string)
