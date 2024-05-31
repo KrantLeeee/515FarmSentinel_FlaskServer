@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}}, methods=["GET", "POST", "DELETE"])  # Enable CORS for specific origin and methods
+CORS(app)  # Enable CORS for specific origin and methods
 
 connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 table_service = TableServiceClient.from_connection_string(conn_str=connection_string)
@@ -24,10 +24,27 @@ def home():
 def get_data():
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
+    row_key = request.args.get('row_key', None)  # Get row_key from query parameters if provided
+
+    # Construct the query
     query = f"TS ge '{start_date}' and TS lt '{end_date}'"
+    if row_key:
+        query += f" and RowKey eq '{row_key}'"
+
     entities = table_client.query_entities(query_filter=query)
-    data = [{"Timestamp": e["TS"], "Description": e["Description"], "Weevil_number": e["Weevil_number"], "ImageUrl": e["ImageUrl"]} for e in entities]
+    data = []
+    for e in entities:
+        row_key = e.get("RowKey")
+        if row_key:
+            data.append({
+                "Timestamp": e.get("TS"),
+                "Description": e.get("Description"),
+                "Weevil_number": e.get("Weevil_number"),
+                "ImageUrl": e.get("ImageUrl"),
+                "rowKey": row_key
+            })
     return jsonify(data)
+
 
 @app.route('/api/capture', methods=['POST'])
 def capture_now():
@@ -44,16 +61,15 @@ def capture_now():
 @app.route('/api/update_peaweevil', methods=['POST'])
 def update_peaweevil():
     data = request.get_json()
-    id = data.get('id')
-    new_number = data.get('newNumber')
+    print('Received data:', data)
+    row_key = data.get('rowKey')  # 更正字段名称
+    new_number = data.get('newWeevilNumber')  # 更正字段名称
 
-    try:
-        entity = table_client.get_entity(partition_key="your_partition_key", row_key=id)
-        entity['Weevil_number'] = new_number
-        table_client.update_entity(entity)
-        return jsonify({"message": "Peaweevil number updated successfully"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    entity = table_client.get_entity(partition_key="ImageDescription", row_key=row_key)
+    entity['Weevil_number'] = new_number
+    table_client.update_entity(entity)
+    return jsonify({"message": "Peaweevil number updated successfully"}), 200
+
 
 if __name__ == '__main__':
     app.run(debug=True)
