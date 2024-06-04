@@ -3,3 +3,4 @@ azure-data-tables
 python-dotenv
 flask-cors
 azure-storage-blob
+openai

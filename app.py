@@ -3,6 +3,7 @@ from azure.data.tables import TableServiceClient
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 from flask_cors import CORS
 import os
+from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,7 +46,6 @@ def get_data():
             })
     return jsonify(data)
 
-
 @app.route('/api/capture', methods=['POST'])
 def capture_now():
     blob_name = "trigger.txt"
@@ -70,6 +70,24 @@ def update_peaweevil():
     table_client.update_entity(entity)
     return jsonify({"message": "Peaweevil number updated successfully"}), 200
 
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    data = request.get_json()
+    print('Received data:', data)
+    client = OpenAI(
+    # This is the default and can be omitted
+        api_key=os.environ.get("OPENAI_API_KEY"),
+        base_url="https://openai.ianchen.io/v1",
+    )
+
+    messages = data.get('messages', [])
+    chat_completion = client.chat.completions.create(
+        messages=messages,
+        model="gpt-3.5-turbo",
+    )
+    response = {}
+    response["message"] = chat_completion.choices[0].message.content
+    return jsonify(response)
 
 if __name__ == '__main__':
     app.run(debug=True)
